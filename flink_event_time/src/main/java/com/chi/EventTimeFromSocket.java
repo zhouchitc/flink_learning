@@ -49,13 +49,18 @@ public class EventTimeFromSocket {
                                 Long aLong = new Long(fields[0]);
                                 return aLong * 1000L;
                             }
-                        })).flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
-            @Override
-            public void flatMap(String value, Collector<Tuple2<String, Integer>> out) throws Exception {
-                String[] fields = value.split(",");
-                out.collect(new Tuple2<>(fields[1], 1));
-            }
-        }).keyBy(data -> data.f0).window(TumblingEventTimeWindows.of(Time.seconds(10))).sum(1).print();
+                        }))
+                .flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+                    @Override
+                    public void flatMap(String value, Collector<Tuple2<String, Integer>> out) throws Exception {
+                        String[] fields = value.split(",");
+                        out.collect(new Tuple2<>(fields[1], 1));
+                    }
+                })
+                .keyBy(data -> data.f0)
+                .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+                .sum(1)
+                .print();
 
         env.execute("run watermark wc");
 
